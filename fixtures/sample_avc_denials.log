@@ -1,0 +1,6 @@
+type=AVC msg=audit(1700000001.100:101): avc:  denied  { read } for  pid=1042 comm="lh-sensor" scontext=system_u:system_r:lh_sensor_ingest_t:s0 tcontext=system_u:object_r:sensor_data_file_t:s0 tclass=file
+type=AVC msg=audit(1700000002.200:102): avc:  denied  { execmem } for  pid=1085 comm="lh-bitnet" scontext=system_u:system_r:lh_ai_infer_t:s0 tcontext=system_u:system_r:lh_ai_infer_t:s0 tclass=process
+type=AVC msg=audit(1700000003.300:103): avc:  denied  { sys_module } for  pid=1102 comm="lh-canbus" capability=16  scontext=system_u:system_r:lh_canbus_ctrl_t:s0 tcontext=system_u:system_r:lh_canbus_ctrl_t:s0 tclass=capability
+type=AVC msg=audit(1700000004.400:104): avc:  denied  { write } for  pid=1085 comm="lh-bitnet" name="mmcblk0p1" dev="tmpfs" ino=456 scontext=system_u:system_r:lh_ai_infer_t:s0 tcontext=system_u:object_r:ota_block_device_t:s0 tclass=blk_file
+type=AVC msg=audit(1700000005.500:105): avc:  denied  { ptrace } for  pid=1042 comm="lh-sensor" scontext=system_u:system_r:lh_sensor_ingest_t:s0 tcontext=system_u:system_r:lh_canbus_ctrl_t:s0 tclass=process
+type=AVC msg=audit(1700000006.600:106): avc:  denied  { getattr } for  pid=1102 comm="lh-canbus" path="/dev/can0" scontext=system_u:system_r:lh_canbus_ctrl_t:s0 tcontext=system_u:object_r:can_device_t:s0 tclass=chr_file
