@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Logihertz SELinux Reference Policy & Posture Auditor CLI Entrypoint
+# Command: lh-selinux
+# Copyright (C) 2026 Logihertz Systems (OPC) Private Limited
+# ==============================================================================
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+LIB_DIR="${PROJECT_ROOT}/lib"
+
+export PYTHONPATH="${LIB_DIR}:${PYTHONPATH:-}"
+
+exec python3 "${LIB_DIR}/cli.py" "$@"

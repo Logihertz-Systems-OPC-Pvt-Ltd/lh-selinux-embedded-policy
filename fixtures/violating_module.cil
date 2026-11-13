@@ -1,0 +1,14 @@
+;; ==============================================================================
+;; Logihertz SELinux Test Fixture - Intentionally Violating Policy Module
+;; fixtures/violating_module.cil
+;; Demonstrates compile-time detection of forbidden allow rules against invariants
+;; ==============================================================================
+
+;; Violation 1: Grant execmem to Edge AI domain (violates Invariant 1: W^X protection)
+(allow lh_ai_infer_t self (process (execmem)))
+
+;; Violation 2: Grant sys_module to CAN bus control domain (violates Invariant 2: kernel module lock)
+(allow lh_canbus_ctrl_t self (capability (sys_module)))
+
+;; Violation 3: Grant raw block write to non-OTA AI domain (violates Invariant 4: block partition integrity)
+(allow lh_ai_infer_t ota_block_device_t (blk_file (write)))

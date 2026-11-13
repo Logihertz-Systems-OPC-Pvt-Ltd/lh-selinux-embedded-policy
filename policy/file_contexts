@@ -1,0 +1,33 @@
+# ==============================================================================
+# Logihertz SELinux File Contexts Specification
+# policy/file_contexts
+# Copyright (C) 2026 Logihertz Systems (OPC) Private Limited
+# ==============================================================================
+
+# Executable Service Binaries
+/usr/bin/lh-init                --  system_u:object_r:lh_init_exec_t:s0
+/usr/bin/lh-bitnet              --  system_u:object_r:lh_ai_infer_exec_t:s0
+/usr/bin/lh-canbus              --  system_u:object_r:lh_canbus_ctrl_exec_t:s0
+/usr/bin/lh-sensor              --  system_u:object_r:lh_sensor_ingest_exec_t:s0
+/usr/bin/lh-ota                 --  system_u:object_r:lh_ota_updater_exec_t:s0
+
+# Hardware & Subsystem Device Nodes
+/dev/nvhost.*                   -c  system_u:object_r:gpu_device_t:s0
+/dev/dri/.*                     -c  system_u:object_r:gpu_device_t:s0
+/dev/video[0-9]+                -c  system_u:object_r:v4l2_device_t:s0
+/dev/can[0-9]+                  -c  system_u:object_r:can_device_t:s0
+/dev/watchdog[0-9]*             -c  system_u:object_r:watchdog_device_t:s0
+/dev/tpm[0-9]*                  -c  system_u:object_r:tpm_device_t:s0
+/dev/tpmrm[0-9]*                -c  system_u:object_r:tpm_device_t:s0
+/dev/mmcblk0p[12]               -b  system_u:object_r:ota_block_device_t:s0
+/dev/mem                        -c  system_u:object_r:kernel_mem_device_t:s0
+/dev/kmem                       -c  system_u:object_r:kernel_mem_device_t:s0
+
+# System Libraries & Configurations
+/etc(/.*)?                          system_u:object_r:etc_t:s0
+/usr/lib(/.*)?                      system_u:object_r:lib_t:s0
+/var/log/lh-.*                      system_u:object_r:var_log_t:s0
+/opt/models(/.*)?                   system_u:object_r:ai_model_file_t:s0
+/opt/sensor_cache(/.*)?             system_u:object_r:sensor_data_file_t:s0
+/var/cache/lh-ota(/.*)?             system_u:object_r:ota_payload_file_t:s0
+/tmp(/.*)?                          system_u:object_r:tmpfs_t:s0

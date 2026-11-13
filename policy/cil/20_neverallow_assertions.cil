@@ -1,0 +1,46 @@
+;; ==============================================================================
+;; Logihertz SELinux CIL Reference Policy - Compile-Time Invariant Assertions
+;; 20_neverallow_assertions.cil
+;; Copyright (C) 2026 Logihertz Systems (OPC) Private Limited
+;; ==============================================================================
+
+;; ------------------------------------------------------------------------------
+;; Invariant 1: Strict Memory W^X Protection (No Executable Heap/Stack/Memory)
+;; ------------------------------------------------------------------------------
+(neverallow all_domains_attr self (process (execmem execstack execheap)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 2: Kernel Integrity Protection (Block sys_module & sys_rawio)
+;; ------------------------------------------------------------------------------
+(neverallow non_init_domains_attr self (capability (sys_module sys_rawio)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 3: Hardware Root-of-Trust / Physical Memory Protection (/dev/mem)
+;; ------------------------------------------------------------------------------
+(neverallow all_domains_attr kernel_mem_device_t (chr_file (read write open mmap_rw)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 4: Firmware Partition Integrity (OTA Block Device Isolation)
+;; ------------------------------------------------------------------------------
+(neverallow non_ota_domains_attr ota_block_device_t (blk_file (write append open)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 5: Anti-Debugging & Anti-Injection (No Cross-Domain ptrace)
+;; ------------------------------------------------------------------------------
+(neverallow all_domains_attr all_domains_attr (process (ptrace)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 6: Edge AI Domain Network & Bus Isolation
+;; ------------------------------------------------------------------------------
+(neverallow lh_ai_infer_t self (tcp_socket (create connect bind listen accept)))
+(neverallow lh_ai_infer_t self (can_socket (create bind read write)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 7: Real-Time Actuator Domain Network Isolation
+;; ------------------------------------------------------------------------------
+(neverallow lh_canbus_ctrl_t self (tcp_socket (create connect bind listen accept)))
+
+;; ------------------------------------------------------------------------------
+;; Invariant 8: Execution Prevention on Writable /tmp & Scratch Mounts
+;; ------------------------------------------------------------------------------
+(neverallow all_domains_attr tmpfs_t (file (execute_no_trans)))

@@ -1,0 +1,22 @@
+{
+  "policy_name": "logihertz_hardened_robotics_appliance",
+  "selinux_mode": "enforcing",
+  "security_selinux_develop": false,
+  "unconfined_domains_enabled": false,
+  "unconfined_processes_count": 0,
+  "allow_execmem": false,
+  "allow_execstack": false,
+  "allow_execheap": false,
+  "neverallow_kernel_integrity": true,
+  "ai_infer_network_isolated": true,
+  "canbus_domain_isolated": true,
+  "allow_tmp_execute_no_trans": false,
+  "strict_entrypoint_transitions": true,
+  "deny_ptrace_enforced": true,
+  "handle_unknown": "deny",
+  "unlabeled_t_files_count": 0,
+  "secure_mode_policyload": true,
+  "secure_mode_insmod": true,
+  "strip_dontaudit_in_production": true,
+  "avc_audit_logging": true
+}

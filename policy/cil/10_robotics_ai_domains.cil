@@ -1,0 +1,116 @@
+;; ==============================================================================
+;; Logihertz SELinux CIL Reference Policy - Autonomous Robotics & Edge AI Domains
+;; 10_robotics_ai_domains.cil
+;; Copyright (C) 2026 Logihertz Systems (OPC) Private Limited
+;; ==============================================================================
+
+;; ------------------------------------------------------------------------------
+;; Executable Entrypoint Types
+;; ------------------------------------------------------------------------------
+(type lh_init_exec_t)
+(type lh_ai_infer_exec_t)
+(type lh_canbus_ctrl_exec_t)
+(type lh_sensor_ingest_exec_t)
+(type lh_ota_updater_exec_t)
+
+(typeattributeset file_type_attr (lh_init_exec_t lh_ai_infer_exec_t lh_canbus_ctrl_exec_t lh_sensor_ingest_exec_t lh_ota_updater_exec_t))
+
+;; ------------------------------------------------------------------------------
+;; Subject Process Domains
+;; ------------------------------------------------------------------------------
+(type lh_init_t)
+(type lh_ai_infer_t)
+(type lh_canbus_ctrl_t)
+(type lh_sensor_ingest_t)
+(type lh_ota_updater_t)
+
+;; Bind domains to system_r role
+(roletype system_r lh_init_t)
+(roletype system_r lh_ai_infer_t)
+(roletype system_r lh_canbus_ctrl_t)
+(roletype system_r lh_sensor_ingest_t)
+(roletype system_r lh_ota_updater_t)
+
+;; Populate Domain Attribute Sets
+(typeattributeset all_domains_attr (lh_init_t lh_ai_infer_t lh_canbus_ctrl_t lh_sensor_ingest_t lh_ota_updater_t))
+(typeattributeset non_init_domains_attr (lh_ai_infer_t lh_canbus_ctrl_t lh_sensor_ingest_t lh_ota_updater_t))
+(typeattributeset non_ota_domains_attr (lh_init_t lh_ai_infer_t lh_canbus_ctrl_t lh_sensor_ingest_t))
+
+;; ------------------------------------------------------------------------------
+;; Domain Entrypoints & Transitions
+;; ------------------------------------------------------------------------------
+(allow lh_init_t lh_init_exec_t (file (read execute open entrypoint map)))
+(allow lh_ai_infer_t lh_ai_infer_exec_t (file (read execute open entrypoint map)))
+(allow lh_canbus_ctrl_t lh_canbus_ctrl_exec_t (file (read execute open entrypoint map)))
+(allow lh_sensor_ingest_t lh_sensor_ingest_exec_t (file (read execute open entrypoint map)))
+(allow lh_ota_updater_t lh_ota_updater_exec_t (file (read execute open entrypoint map)))
+
+(typetransition lh_init_t lh_ai_infer_exec_t process lh_ai_infer_t)
+(typetransition lh_init_t lh_canbus_ctrl_exec_t process lh_canbus_ctrl_t)
+(typetransition lh_init_t lh_sensor_ingest_exec_t process lh_sensor_ingest_t)
+(typetransition lh_init_t lh_ota_updater_exec_t process lh_ota_updater_t)
+
+(allow lh_init_t lh_ai_infer_t (process (transition sigchld)))
+(allow lh_init_t lh_canbus_ctrl_t (process (transition sigchld)))
+(allow lh_init_t lh_sensor_ingest_t (process (transition sigchld)))
+(allow lh_init_t lh_ota_updater_t (process (transition sigchld)))
+
+;; ------------------------------------------------------------------------------
+;; Base Shared Access Rules (Libraries, Runtime Logging, Config)
+;; ------------------------------------------------------------------------------
+(allow all_domains_attr lib_t (file (read open getattr map execute)))
+(allow all_domains_attr lib_t (dir (search read open)))
+(allow all_domains_attr etc_t (file (read open getattr)))
+(allow all_domains_attr etc_t (dir (search read open)))
+(allow all_domains_attr var_log_t (file (write append open getattr create)))
+(allow all_domains_attr var_log_t (dir (search write add_name)))
+(allow all_domains_attr tmpfs_t (dir (search read open)))
+
+;; ------------------------------------------------------------------------------
+;; Domain 1: lh_init_t (System Initializer & Service Supervisor)
+;; ------------------------------------------------------------------------------
+(allow lh_init_t self (process (fork setpgid setsched)))
+(allow lh_init_t self (capability (chown dac_override setgid setuid sys_admin)))
+(allow lh_init_t bin_t (file (read execute open map)))
+(allow lh_init_t bin_t (dir (search read open)))
+(allow lh_init_t rootfs_t (dir (search read open)))
+
+;; ------------------------------------------------------------------------------
+;; Domain 2: lh_ai_infer_t (Edge AI Vision & Language Model Inference)
+;; Strictly isolated from WAN network and actuator CAN bus
+;; ------------------------------------------------------------------------------
+(allow lh_ai_infer_t self (process (fork setsched)))
+(allow lh_ai_infer_t gpu_device_t (chr_file (ioctl read write open mmap_rw map)))
+(allow lh_ai_infer_t ai_model_file_t (file (read open getattr map)))
+(allow lh_ai_infer_t ai_model_file_t (dir (search read open)))
+(allow lh_ai_infer_t lh_sensor_ingest_t (unix_stream_socket (connectto read write)))
+
+;; ------------------------------------------------------------------------------
+;; Domain 3: lh_canbus_ctrl_t (Real-Time Actuator & Sensor Control)
+;; Strictly isolated from external network sockets
+;; ------------------------------------------------------------------------------
+(allow lh_canbus_ctrl_t self (process (fork setsched)))
+(allow lh_canbus_ctrl_t self (can_socket (create read write bind getopt setopt shutdown)))
+(allow lh_canbus_ctrl_t can_device_t (chr_file (ioctl read write open)))
+(allow lh_canbus_ctrl_t watchdog_device_t (chr_file (ioctl write open)))
+
+;; ------------------------------------------------------------------------------
+;; Domain 4: lh_sensor_ingest_t (Camera, LiDAR & SDR Ingestion)
+;; ------------------------------------------------------------------------------
+(allow lh_sensor_ingest_t self (process (fork setsched)))
+(allow lh_sensor_ingest_t self (unix_stream_socket (create bind listen accept read write getopt setopt)))
+(allow lh_sensor_ingest_t v4l2_device_t (chr_file (ioctl read write open mmap_rw map)))
+(allow lh_sensor_ingest_t sensor_data_file_t (file (read write create open getattr append)))
+(allow lh_sensor_ingest_t sensor_data_file_t (dir (search write add_name read open)))
+
+;; ------------------------------------------------------------------------------
+;; Domain 5: lh_ota_updater_t (Atomic A/B Firmware Update Daemon)
+;; Exclusive domain authorized to write ota_block_device_t & tpm_device_t
+;; ------------------------------------------------------------------------------
+(allow lh_ota_updater_t self (process (fork)))
+(allow lh_ota_updater_t self (tcp_socket (create connect read write getopt setopt shutdown)))
+(allow lh_ota_updater_t self (capability (sys_admin)))
+(allow lh_ota_updater_t ota_block_device_t (blk_file (read write open ioctl getattr)))
+(allow lh_ota_updater_t tpm_device_t (chr_file (read write open ioctl)))
+(allow lh_ota_updater_t ota_payload_file_t (file (read open getattr)))
+(allow lh_ota_updater_t ota_payload_file_t (dir (search read open)))

@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-and-test:
+    name: Verify & Test SELinux CIL Policy & Auditor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Shell and Python Syntax
+        run: |
+          bash -n bin/lh-selinux
+          bash -n tests/run_tests.sh
+          python3 -m py_compile lib/*.py tests/test_suite.py
+
+      - name: Run Comprehensive Verification Test Suite
+        run: |
+          bash tests/run_tests.sh
+
+      - name: Verify CLI scan command (Hardened Policy -> Exit 0)
+        run: |
+          ./bin/lh-selinux scan fixtures/hardened_selinux_policy.json --no-color
+          ./bin/lh-selinux scan fixtures/hardened_selinux_policy.json --format json
+          ./bin/lh-selinux scan fixtures/hardened_selinux_policy.json --format sarif
+
+      - name: Verify CLI scan command (Vulnerable Policy -> Exit 1)
+        run: |
+          if ./bin/lh-selinux scan fixtures/vulnerable_selinux_policy.json --no-color; then
+            echo "Expected exit code 1 for vulnerable policy"
+            exit 1
+          else
+            echo "Successfully caught vulnerable policy violations"
+          fi
+
+      - name: Verify CIL Invariant Disjointness Proof
+        run: |
+          ./bin/lh-selinux verify-cil policy/cil/ --no-color
+          if ./bin/lh-selinux verify-cil policy/cil/ --extra-cil fixtures/violating_module.cil --no-color; then
+            echo "Expected exit code 1 for violating module"
+            exit 1
+          else
+            echo "Successfully detected compile-time neverallow violations"
+          fi
+
+      - name: Verify AVC Denial Synthesizer & Intrusion Filter
+        run: |
+          if ./bin/lh-selinux audit2cil fixtures/sample_avc_denials.log --policy-dir policy/cil/ --no-color; then
+            echo "Expected exit code 1 when intrusion denials present"
+            exit 1
+          else
+            echo "Successfully blocked neverallow AVC violations"
+          fi
+
+      - name: Verify File Contexts Specification
+        run: |
+          ./bin/lh-selinux check-contexts policy/file_contexts --policy-dir policy/cil/
+
+      - name: Verify Clean Release Tarball Generation
+        run: |
+          mkdir -p dist
+          tar --exclude-vcs --exclude='./dist' --exclude='*.pyc' --exclude='__pycache__' -czvf dist/lh-selinux-embedded-policy-v0.1.0.tar.gz .
+          tar -tzvf dist/lh-selinux-embedded-policy-v0.1.0.tar.gz

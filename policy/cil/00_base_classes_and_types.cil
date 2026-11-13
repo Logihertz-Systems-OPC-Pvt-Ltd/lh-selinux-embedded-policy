@@ -1,0 +1,76 @@
+;; ==============================================================================
+;; Logihertz SELinux CIL Reference Policy - Base Classes, Permissions and Types
+;; 00_base_classes_and_types.cil
+;; Copyright (C) 2026 Logihertz Systems (OPC) Private Limited
+;; ==============================================================================
+
+(handleunknown deny)
+(mls true)
+
+;; ------------------------------------------------------------------------------
+;; Kernel Security Classes & Access Vectors
+;; ------------------------------------------------------------------------------
+(class process (fork transition sigchld sigkill sigstop signull signal ptrace execmem execstack execheap setcap setpgid setsched getsched getsession setcurrent setexec setfscreate))
+(class file (ioctl read write create getattr setattr lock relabelfrom relabelto append unlink link rename execute open mmap_rw entrypoint map execute_no_trans))
+(class dir (ioctl read write create getattr setattr lock relabelfrom relabelto append unlink link rename add_name remove_name reparent search rmdir open))
+(class chr_file (ioctl read write create getattr setattr lock relabelfrom relabelto append unlink link rename open mmap_rw map))
+(class blk_file (ioctl read write create getattr setattr lock relabelfrom relabelto append unlink link rename open mmap_rw map))
+(class lnk_file (ioctl read write create getattr setattr lock relabelfrom relabelto append unlink link rename read open))
+(class unix_stream_socket (ioctl read write create getattr setattr lock relabelfrom relabelto append bind connect listen accept getopt setopt shutdown connectto))
+(class tcp_socket (ioctl read write create getattr setattr lock relabelfrom relabelto append bind connect listen accept getopt setopt shutdown name_bind node_bind name_connect))
+(class udp_socket (ioctl read write create getattr setattr lock relabelfrom relabelto append bind getopt setopt shutdown name_bind node_bind))
+(class can_socket (ioctl read write create getattr setattr lock relabelfrom relabelto append bind getopt setopt shutdown))
+(class netlink_route_socket (ioctl read write create getattr setattr lock relabelfrom relabelto append bind getopt setopt shutdown nlmsg_read nlmsg_write))
+(class capability (chown dac_override dac_read_search fowner fsetid kill setgid setuid setpcap linux_immutable net_bind_service net_broadcast net_admin net_raw ipc_lock ipc_owner sys_module sys_rawio sys_chroot sys_ptrace sys_pacct sys_admin sys_boot sys_nice sys_resource sys_time sys_tty_config mknod lease audit_write audit_control setfcap))
+(class capability2 (mac_override mac_admin syslog wake_alarm block_suspend audit_read bpf checkpoint_restore))
+(class system (ipc_info syslog_read syslog_mod syslog_console module_request module_load halt reboot status))
+(class bpf (map_create map_read map_write prog_load prog_run))
+
+(classorder (process file dir chr_file blk_file lnk_file unix_stream_socket tcp_socket udp_socket can_socket netlink_route_socket capability capability2 system bpf))
+
+;; ------------------------------------------------------------------------------
+;; MLS / MCS Definitions & Roles
+;; ------------------------------------------------------------------------------
+(sensitivity s0)
+(sensitivityorder (s0))
+
+(user system_u)
+(role system_r)
+(userrole system_u system_r)
+(userlevel system_u (s0))
+(userrange system_u (s0 s0))
+
+;; ------------------------------------------------------------------------------
+;; Core Type Attributes
+;; ------------------------------------------------------------------------------
+(typeattribute all_domains_attr)
+(typeattribute non_init_domains_attr)
+(typeattribute non_ota_domains_attr)
+(typeattribute device_node_attr)
+(typeattribute file_type_attr)
+
+;; ------------------------------------------------------------------------------
+;; Base Object Types
+;; ------------------------------------------------------------------------------
+(type rootfs_t)
+(type bin_t)
+(type lib_t)
+(type etc_t)
+(type var_log_t)
+(type tmpfs_t)
+
+(type gpu_device_t)
+(type v4l2_device_t)
+(type can_device_t)
+(type tpm_device_t)
+(type watchdog_device_t)
+(type ota_block_device_t)
+(type kernel_mem_device_t)
+
+(type ai_model_file_t)
+(type sensor_data_file_t)
+(type ota_payload_file_t)
+
+;; Associate type attributes
+(typeattributeset file_type_attr (rootfs_t bin_t lib_t etc_t var_log_t tmpfs_t ai_model_file_t sensor_data_file_t ota_payload_file_t))
+(typeattributeset device_node_attr (gpu_device_t v4l2_device_t can_device_t tpm_device_t watchdog_device_t ota_block_device_t kernel_mem_device_t))

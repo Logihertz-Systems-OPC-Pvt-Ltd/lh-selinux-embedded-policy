@@ -1,0 +1,22 @@
+{
+  "policy_name": "insecure_permissive_appliance",
+  "selinux_mode": "permissive",
+  "security_selinux_develop": true,
+  "unconfined_domains_enabled": true,
+  "unconfined_processes_count": 8,
+  "allow_execmem": true,
+  "allow_execstack": true,
+  "allow_execheap": true,
+  "neverallow_kernel_integrity": false,
+  "ai_infer_network_isolated": false,
+  "canbus_domain_isolated": false,
+  "allow_tmp_execute_no_trans": true,
+  "strict_entrypoint_transitions": false,
+  "deny_ptrace_enforced": false,
+  "handle_unknown": "allow",
+  "unlabeled_t_files_count": 42,
+  "secure_mode_policyload": false,
+  "secure_mode_insmod": false,
+  "strip_dontaudit_in_production": false,
+  "avc_audit_logging": false
+}
