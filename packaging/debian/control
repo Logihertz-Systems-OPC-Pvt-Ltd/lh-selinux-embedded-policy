@@ -1,0 +1,9 @@
+Package: lh-selinux-embedded-policy
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Sameer Tawade <ops@logihertz.com>
+Homepage: https://www.logihertz.com
+Description: lh-selinux - Compile-Time Mandatory Access Control Disjointness Predicate
+ Modular SELinux Common Intermediate Language (.cil) reference policy for headless autonomous robotics & Edge AI appliances, featuring a compile-time neverallow disjointness verifier and safe audit2cil engine.
